@@ -6,6 +6,7 @@ tags: [flareon12]
 comments: true
 mathjax: true
 author: Hoàng Tiến Minh
+toc: true
 ---
 
 The Flare-On Challenge is a reverse engineering contest held every year by the FLARE team (Mandiant, Google Cloud Security) for all reverse engineers and malware analysts. This year, it had only 9 challenges instead of 10, spread over 4 weeks, and some of them were quite strange and difficult. Luckily, I finished the contest on the 27th day (it lasted for 28 days, by the way).
