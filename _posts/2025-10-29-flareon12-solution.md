@@ -66,7 +66,7 @@ Flag: drilling_for_teddies@flare-on.com
 
 ## Challenge 2: project_chimera
 
-![Chall2-description]({{ '/assets/img/flareon12/.png' | relative_url }})
+![Chall2-description]({{ '/assets/img/flareon12/chall2.png' | relative_url }})
 
 The challenge artifact is a single Python script, `project_chimera.py`. Its source code is provided as follows:
 
