@@ -20,7 +20,7 @@ Here is my solution of this year flare on challenge. Please give me the feedback
 
 
 ## Challenge 1: Drill Baby Drill!.
-
+---
 ![Chall1-description]({{ '/assets/img/flareon12/chall1.png' | relative_url }})
 
 The challenge provides a Python script implementing a 'find the bear' game. The objective is to retrieve the flag, which is revealed upon successful completion. To win, the player must correctly 'drill' the 'bear' location on each level without hitting any 'rocks'. The game consists of multiple levels, each containing a single 'bear', and the level sequence is randomized.
