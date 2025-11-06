@@ -19,14 +19,13 @@ This year, Viet Nam has 27 finishers, takes the stacks the winners circle. I am 
 Here is my solution of this year flare on challenge. Please give me the feedback if you have great solution.
 
 
-## Challenge 1: Drill Baby Drill!.
----
+## Challenge 1: Drill Baby Drill!
 ![Chall1-description]({{ '/assets/img/flareon12/chall1.png' | relative_url }})
 
 The challenge provides a Python script implementing a 'find the bear' game. The objective is to retrieve the flag, which is revealed upon successful completion. To win, the player must correctly 'drill' the 'bear' location on each level without hitting any 'rocks'. The game consists of multiple levels, each containing a single 'bear', and the level sequence is randomized.
 ![Game-UI]({{ '/assets/img/flareon12/chall1-pic1.png' | relative_url }})
 
-### The winning mechanism
+**Analyzing the winning mechanism**
 
 A logic flaw was identified in the game's obstacle generation mechanism. The game utilizes a `boulder_layout` array, indexed by the column `x`, to determine obstacle locations. Upon inspection, it was found that for any given `current_level`, the column index corresponding to `len(LevelNames[current_level])` (i.e., the column where `x == len(LevelNames[current_level])`) is hardcoded with the value `-1`.
 The game's fail-state (hitting a rock) is triggered by the condition `boulder_level == drill_level`. Since the `boulder_level` at this specific column is set to `-1`, this equality check will never evaluate to true, rendering this column 'safe' (rock-free) by default. This behavior strongly implies that the value `len(LevelNames[current_level])` is the deterministic solution (the 'bear's' column index) for each respective level.
