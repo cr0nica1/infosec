@@ -19,7 +19,7 @@ This year, Vietnam had 27 finishers, taking the top spot in the winners’ circl
 
 Here is my solution for this year’s Flare-On Challenge. Please feel free to share your feedback if you have a better solution!
 
-{% include toc.html %}
+* TOC
 
 ## Challenge 1: Drill Baby Drill!
 ![Chall1-description]({{ '/assets/img/flareon12/chall1.png' | relative_url }})
