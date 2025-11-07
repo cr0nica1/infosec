@@ -1,4 +1,4 @@
-<img width="560" height="600" alt="image" src="https://github.com/user-attachments/assets/8eb0467d-2b48-4ba6-bfcb-7c741a46d6c2" />---
+---
 layout: post
 title: The 12th annual Flare-On challenge solutions
 gh-repo: cr0nica1/infosec
