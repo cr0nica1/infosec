@@ -1,6 +1,6 @@
----
+<img width="560" height="600" alt="image" src="https://github.com/user-attachments/assets/8eb0467d-2b48-4ba6-bfcb-7c741a46d6c2" />---
 layout: post
-title: The 12th annual Flare-On challenge Solution
+title: The 12th annual Flare-On challenge solutions
 gh-repo: cr0nica1/infosec
 tags: [flareon12]
 comments: true
@@ -273,3 +273,34 @@ This image is basic: only 1 pixel high and 37 pixels wide (37 bytes). Looking ba
 ![chall3-flag]({{ '/assets/img/flareon12/chall3-pic6.png' | relative_url }})
 
 Flag: Puzzl1ng-D3vilish-F0rmat@flare-on.com
+
+## Challenge 4: UnholyDragon
+
+The challenge artifact is a file named `UnholyDragon-150.exe`. Based on its extension, it is presumably a Windows Portable Executable (PE). However, analysis using `Detect-it-easy` yielded anomalous results. DiE was unable to parse the file or identify it as a valid PE executable.
+
+![chall4-DiE]({{ '/assets/img/flareon12/chall4-pic1.png' | relative_url }})
+
+Using `CFF Explorer` to inspect the file's hex data, it was observed that the program's magic byte is not the correct MZ signature (ASCII 4D 5A) found in typical PE files.
+
+![chall4-hex]({{ '/assets/img/flareon12/chall4-pic2.png' | relative_url }})
+
+After patching the magic byte (correcting it to MZ), I attempted to run the program (To be safe, this was done inside a virtual machine). Upon execution, the program dropped 4 new files: UnholyDragon-151.exe, UnholyDragon-152.exe, UnholyDragon-153.exe, UnholyDragon-154.exe .
+
+![chall4-dropfile]({{ '/assets/img/flareon12/chall4-pic3.png' | relative_url }})
+
+This confirms a pattern: the program drops new files sequentially, named UnholyDragon-(sequence number).exe, and the process suddenly stops at UnholyDragon-154.exe. I attempted to analyze the files in IDA, but the resulting pseudocode was too complex to read. The binary itself is also very large. I tried searching online for 'UnholyDragon' to see if there was any hope of solving it, and I found this image on the internet:
+
+![chall4-unholy]({{ '/assets/img/flareon12/chall4-pic4.png' | relative_url }})
+
+Based on the 'infinite loop' idea, I tested a hypothesis: I renamed the original UnholyDragon-150.exe file to UnholyDragon-0.exe and ran it. Immediately upon execution, the program generated 150 other 'UnholyDragon' files.
+
+![chall4-testloop]({{ '/assets/img/flareon12/chall4-pic5.png' | relative_url }})
+
+The UnholyDragon-150.exe file generated in this new run also had an incorrect magic byte. This is likely the reason the file generation process terminated at this specific point. I proceeded to patch this file as well and executed it, which led to a surprising result.
+
+![chall4-flag]({{ '/assets/img/flareon12/chall4-pic6.png' | relative_url }})
+
+Flag: dr4g0n_d3n1al_of_s3rv1ce@flare-on.com
+
+
+
