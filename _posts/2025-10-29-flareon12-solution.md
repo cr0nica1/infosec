@@ -22,6 +22,7 @@ Here is my solution for this year’s Flare-On Challenge. Please feel free to sh
 {% include toc.html %}
 
 ## Challenge 1: Drill Baby Drill!
+
 ![Chall1-description]({{ '/assets/img/flareon12/chall1.png' | relative_url }})
 
 The challenge provides a Python script implementing a 'find the bear' game. The objective is to retrieve the flag, which is revealed upon successful completion. To win, the player must correctly 'drill' the 'bear' location on each level without hitting any 'rocks'. The game consists of multiple levels, each containing a single 'bear', and the level sequence is randomized.
@@ -238,3 +239,37 @@ cowsay.cow('I am alive! The secret formula is:\n' + decrypted_formula)
 ![chall2-flag]({{ '/assets/img/flareon12/chall2-pic5.png' | relative_url }})
 
 Flag: Th3_Alch3m1sts_S3cr3t_F0rmul4@flare-on.com
+
+## Challenge 3: pretty_devilish_file
+
+![chall3-description]({{ '/assets/img/flareon12/chall3.png' | relative_url }})
+
+The challenge artifact is a PDF file. Using Google Chrome to render this PDF file, we can see that its content is quite simple, as follows:
+
+![chall3-PDFrender]({{ '/assets/img/flareon12/chall3-pic1.png' | relative_url }})
+
+**Analyzing PDF file with VScode**
+
+The PDF was inspected using VSCode to analyze its raw text/binary stream, bypassing the typical rendering process. This analysis revealed a clear-text notification embedded at the end of the file stream. The notification explicitly states that the PDF document is encrypted.
+
+![chall3-PDFanalysis]({{ '/assets/img/flareon12/chall3-pic2.png' | relative_url }})
+
+The PDF file must be decrypted. Post-decryption, the resulting file will be loaded into VSCode to resume the analysis.
+
+![chall3-PDFdecrypted]({{ '/assets/img/flareon12/chall3-pic3.png' | relative_url }})
+
+**PDF low-level content stream analysis**
+
+To parse the individual PDF objects, the pdf-parser tool was utilized. During the analysis of the object streams, it was noted that the obj responsible for rendering the visible content (the "Flare-On!" string) also contained a suspicious and anomalous hex-encoded string.
+
+![chall3-strange-obj]({{ '/assets/img/flareon12/chall3-pic4.png' | relative_url }})
+
+The hex string begins with `ffd8`, which is the magic byte for a JPEG file. This indicates that this data is an image. After converting this hex string into an image, we get the following:
+
+![chall3-image]({{ '/assets/img/flareon12/chall3-pic5.png' | relative_url }})
+
+This image is basic: only 1 pixel high and 37 pixels wide (37 bytes). Looking back at the extracted obj content, we see the definition line: `BI /W 37/H 1/CS/G/BPC 8/L 458/F[\n/AHx\n/DCT\n]`. In PDF syntax, BI (Begin Image) ... ID (Image Data) ... EI (End Image) defines an Inline Image. This declaration specifies a 1x37 pixel image, with a Grayscale color space (`/CS /G`), 8-bits per component (`/BPC 8`), which is JPEG-compressed (`/DCT`) and ASCII Hex-encoded (`/AHx`). By interpreting the grayscale pixel values of the 1x37 image (treating each pixel as a byte), the flag is recovered.
+
+![chall3-flag]({{ '/assets/img/flareon12/chall3-pic6.png' | relative_url }})
+
+Flag: Puzzl1ng-D3vilish-F0rmat@flare-on.com
