@@ -414,7 +414,7 @@ The message encryption handler (`process_message`) implements two distinct, user
 
 - LCG-XOR encryption
 
-!chall6]({{ '/assets/img/flareon12/chall6-pic4.png' | relative_url }})
+![chall6]({{ '/assets/img/flareon12/chall6-pic4.png' | relative_url }})
 
 The RSA public key, which is utilized by the asymmetric encryption routine, is located in the file `public.pem`. Furthermore, the application persists its chat history. These logs are written to `chat_log.json`.
 
