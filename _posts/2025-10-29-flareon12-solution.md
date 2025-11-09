@@ -429,3 +429,25 @@ The RSA ciphertexts were successfully decrypted, and the flag was recovered, by 
 ![chall6-flag]({{ '/assets/img/flareon12/chall6-pic7.png' | relative_url }})
 
 Flag: W3b3_i5_Gr8@flare-on.com
+
+## Challenge 7: The Boss Needs Help
+
+![chall7]({{ '/assets/img/flareon12/chall7.png' | relative_url }})
+
+Challenge cho một file PE `hopeanddream.exe`. Như thường lệ, sử dụng Detect-it-easy để xác định ngôn ngữ, compiler và tình trạng packer.
+
+![chall7-DiE]({{ '/assets/img/flareon12/chall7-pic1.png' | relative_url }})
+
+Dựa trên thông tin này, file được viết bằng C++ và không hề bị pack. Tải file vào IDA để phân tích.
+
+![chall7-load]({{ '/assets/img/flareon12/chall7-pic2.png' | relative_url }})
+
+IDA không thể xây dựng control-flow graph cho hàm `main`, cũng không thể decompile được do file quá lớn. Điều chỉnh dung lượng tối đa một hàm có thể decompile cho IDA để decompile.
+
+![chall7-decompile]({{ '/assets/img/flareon12/chall7-pic3.png' | relative_url }})
+
+Phần lớn các đoạn mã trong hàm main là các đoạn mã Mixed Boolean-Arithmetic (MBA). Nếu cố gắng đọc các đoạn MBA này, chúng ta sẽ thấy các đoạn mã nằm giữa một câu lệnh đọc biến toàn cục và một câu lệnh ghi biến toàn cục là các đoạn MBA rác. Viết script để patch hết chúng lại bằng nop sau đó decompile lại.
+
+
+
+
