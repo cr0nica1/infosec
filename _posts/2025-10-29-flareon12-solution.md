@@ -531,8 +531,70 @@ This password.txt file was extracted to obtain the password. Finally, using this
 Flag: C4N7_ST4R7_A_FLAR3_WITHOUT_4_$PARK@FLARE-ON.COM
 
 
+## Challenge 8: FlareAuthenticator
+
+![chall8-des]({{ '/assets/img/flareon12/chall8.png' | relative_url }})
+
+The challenge provides a program that requires 25 separate password digits to perform its authentication routine. IDA Pro will be used to disassemble the machine code and analyze its logic.
+
+![chall8-des]({{ '/assets/img/flareon12/chall8-pic1.png' | relative_url }})
+
+The main function could not be decompiled into pseudocode for analysis. This is because the program heavily relies on indirect calls (call rax). With no other ideas, I was forced to debug the program step-by-step to understand its execution flow. I set breakpoints at each call rax location. At the call rax instruction at RVA `0x15e99`, the program executes a call to the function at RVA `0x81760`. When this function is called, the argument passed to it is the index of the password digit that was just selected.
+
+![chall8-des]({{ '/assets/img/flareon12/chall8-pic2.png' | relative_url }})
+
+Continuing the debugging session, I observed that at RVA `0x16766`, the program also calls the function at RVA `0x81760`. However, the arguments passed to the function at this new location were different.
+
+![chall8-des]({{ '/assets/img/flareon12/chall8-pic3.png' | relative_url }})
+
+The argument passed at this call site is structured: 
+
+- Its lower byte stores the ASCII value of the input digit.
+- Its higher byte stores the index from the password input table.
+
+The return values from the two separate calls to the RVA `0x81760` function are then multiplied together. This final product is subsequently stored in a local variable.
+
+![chall8-des]({{ '/assets/img/flareon12/chall8-pic4.png' | relative_url }})
+
+A hardware breakpoint will be set on the stack address that stores the final result of the multiplication. All previously set breakpoints will be disabled or bypassed. After setting this, I will run the program and press the 'OK' button to trigger the final validation logic.
+
+![chall8-des]({{ '/assets/img/flareon12/chall8-pic5.png' | relative_url }})
+
+The value at this stack address is then compared against the magic constant `0xbc42d5779fec401`. To pass the check, the computed value must be equal to this constant. It is now clear that the value at this address is a summation of 25 elements.
+
+Each individual element is the product of:
+
+- The return value of the function at RVA 0x15e99.
+
+- The return value of the function at RVA 0x16766.
+
+More precisely, the validation expression is:
+
+```
+sum_of_h(i)_*_h(i<<8+d[i]) =0xbc42d5779fec401 for i in range (1,26) 
+```
+
+Where:
+
+- `d[i]` is the digit in input cell i.
+
+- `h()` is the function at RVA `0x81760`.
+
+Or, to state the expression more precisely:
+
+```
+sum_of_x[i]=0xbc42d5779fec401 for i in range (1,26) 
+```
 
 
+Since each input cell can only be one of 10 possible digits (0-9), I can write a script to emulate all possible `x[i]` values that can be generated at each position `i`.
 
+![chall8-des]({{ '/assets/img/flareon12/chall8-pic6.png' | relative_url }})
+
+Using these emulated results, I will now write a solver script. This script will solve the constraint problem and recover the correct password.
+
+![chall8-des]({{ '/assets/img/flareon12/chall8-pic7.png' | relative_url }})
+
+Flag: s0m3t1mes_1t_do3s_not_m4ke_any_s3n5e@flare-on.com
 
 
