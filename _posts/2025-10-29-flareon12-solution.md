@@ -597,4 +597,89 @@ Using these emulated results, I will now write a solver script. This script will
 
 Flag: s0m3t1mes_1t_do3s_not_m4ke_any_s3n5e@flare-on.com
 
+## Challenge 9: 10000
+
+![chall9-des]({{ '/assets/img/flareon12/chall9.png' | relative_url }})
+
+The challenge provides a PE file with a significantly large file size. Upon inspecting the file's properties, it was noted that its resource section is massive. Resource Hacker was used to analyze this file's resources. The tool reported that the file contains a total of 10,000 resource blocks.
+
+![chall9-des]({{ '/assets/img/flareon12/chall9-pic1.png' | relative_url }})
+
+After further analysis, I realized that these 10,000 resource blocks are actually 10,000 individual DLL files that have been compressed using apLib. The next step is to extract and decompress all of these DLLs.
+
+![chall9-des]({{ '/assets/img/flareon12/chall9-pic2.png' | relative_url }})
+
+Returning to the main `10000.exe` file. By using IDA to analyze the file starting from its Entry Point, it's easy to see that the function `sub_140001E87()` handles the program's main functionality.
+
+![chall9-des]({{ '/assets/img/flareon12/chall9-pic2.png' | relative_url }})
+
+The function `sub_140001E87()` loads the contents of the `license.bin` file. The program then checks the size of `license.bin`. If the file size is not equal to 340000 bytes, it immediately prints `invalid license file`.
+
+![chall9-des]({{ '/assets/img/flareon12/chall9-pic3.png' | relative_url }})
+
+![chall9-des]({{ '/assets/img/flareon12/chall9-pic4.png' | relative_url }})
+
+After the `license.bin` file passes its size validation, its data is processed one block at a time. The file is read as a total of 10,000 blocks, where each block is 34 bytes in size. Each 34-byte block adheres to the following structure:
+
+```
+2 bytes id + 32 bytes data
+```
+
+Next, in each loop iteration, the program loads the DLL named id + ".dll". It then uses the `_Z5check()` function (exported from that specific DLL) to validate the 32 bytes of data from the corresponding data block. When the DLL is loaded, a large array, `Buf1[10000]`, is also passed as a parameter.
+
+![chall9-des]({{ '/assets/img/flareon12/chall9-pic5.png' | relative_url }})
+
+After a series of transformations, if the data block is successfully validated, the program adds the current iteration index into Buf1[i]. If the data fails to satisfy the check condition, the loop will exit prematurely, and the program will print 'invalid license file'. After the loop completes all 10,000 checks successfully the program performs a final validation: it compares the resulting `Buf1[10000]` array against a hardcoded array, `Buf2[10000]`, which is stored in the executable.
+
+![chall9-des]({{ '/assets/img/flareon12/chall9-pic6.png' | relative_url }})
+
+**Finding the DLL order**
+
+From the information above, a valid license file must have the order of the ids arranged in a specific sequence. This is required so that, at the end of the process, the computed `Buf1` array becomes identical to the `Buf2` array. Because the transformation algorithm involves adding the current iteration index to `Buf1[dll_id]`, the structure of this Buf1 modification creates a dependency graph. The problem is therefore reduced to finding the topological sort of the blocks in license.bin. A toposort algorithm will be used to calculate this required DLL order.
+
+**Data encryption mechanism analysis**
+
+All the DLLs have a very similar structure, so we will analyze one DLL as a sample. I will now analyze the `check()` function inside `0000.dll`. First, this function takes the 32-byte data and sends it through a series of transformation functions.
+
+![chall9-des]({{ '/assets/img/flareon12/chall9-pic7.png' | relative_url }})
+
+These functions (the sub-routines) might be defined locally within 0000.dll itself, or they could be imported from one of the other DLLs. Upon review, I realized that all these transformations fall into just three distinct algorithm types. The first type is a substitution cipher algorithm.
+
+![chall9-des]({{ '/assets/img/flareon12/chall9-pic8.png' | relative_url }})
+
+The second algorithm type is an encryption algorithm based on Modular Exponentiation.
+
+![chall9-des]({{ '/assets/img/flareon12/chall9-pic9.png' | relative_url }})
+
+The final algorithm type is an encryption algorithm based on Permutation.
+
+![chall9-des]({{ '/assets/img/flareon12/chall9-pic10.png' | relative_url }})
+
+At the prologue of each of these transformation functions (substitution, mod-exp, permutation), the data is first XORed with a specific value. We know that this value is loaded from the DLL's entry point as a parameter, and it is in fact derived from the Buf1 array I mentioned earlier. As the program iterates through the DLLs, the state of `Buf1` will be different for each `check()` call. Therefore, a critical note for our solver algorithm is: for each DLL, we must first calculate the current state of Buf1 at that specific moment in the execution flow. From this current Buf1 state, we can then derive the correct XOR key needed to reverse the input data for each of the three encryption types.
+
+**Check mechanism analysis**
+
+After passing through the aforementioned encryption algorithms, the data is then XORed against a 4x4 matrix. Immediately following this XOR operation, some kind of check function is called. If this check is not satisfied, the routine will immediately `return 0`. However, because the final, correct data will inherently satisfy this intermediate condition, i can safely disregard this specific check for now.
+
+![chall9-des]({{ '/assets/img/flareon12/chall9-pic11.png' | relative_url }})
+
+The encryption algorithm below (the final check) is a routine involving transformations such as matrix multiplication, exponentiation, and modular arithmetic. Finally, the resulting computed value is compared against a hardcoded result. (P.S. If this algorithm seems difficult to visualize, you can copy it into ChatGPT for an explanation. After it explains, it becomes very simple to solve.)
+
+**Crafting the valid license**
+
+From the analysis results, I will create a script to craft the `license.bin` file based on the following steps:
+
+- First, iterate through the DLLs based on the result obtained from the toposort.
+- With each DLL, use capstone to scan the DLL to collect basic information of the functions (in the form of f.....) that are called inside the check() function: the values of declared local variables, the encryption algorithm type.
+- Besides that, get information about other constants inside the check function and the hardcoded result for comparison at the end of the `check()` functions.
+- Take that information to solve the encryption algorithm to find the 32 bytes of data that are valid for that DLL. Join the 2-byte id to the front and write the 34 bytes of this block into the `license.bin` file.
+- After that, update the state of the Buf1 array and continue with the other DLLs.
+
+With those steps, I have successfully crafted the valid `license.bin` file. Because letting the `10000.exe` file run and check the license file takes too long, I am getting the flag using the logic inside the `10000.exe` file: use the hash code of the license.bin file as the key, the hardcoded IV to decrypt the AES-encrypted flag inside the `10000.exe` file
+
+![chall9-des]({{ '/assets/img/flareon12/chall9-pic12.png' | relative_url }})
+
+Flag: Its_l1ke_10000_spooO0o0O0oOo0o0O0O0OoOoOOO00o0o0Ooons@flare-on.com
+
+
 
